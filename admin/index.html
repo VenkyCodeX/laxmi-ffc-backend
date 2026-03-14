@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin – Laxmi Fast Food</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Poppins',sans-serif; background:#0d0d0d; color:#fff; min-height:100vh; }
+
+    /* LOGIN */
+    #loginScreen {
+      display:flex; align-items:center; justify-content:center;
+      min-height:100vh; background:linear-gradient(135deg,#1a0000,#0d0d0d);
+    }
+    .login-box {
+      background:#181818; border:1px solid #2a2a2a; border-radius:16px;
+      padding:40px 36px; width:100%; max-width:380px; text-align:center;
+    }
+    .login-box img { height:70px; margin-bottom:16px; border-radius:8px; }
+    .login-box h2 { font-size:22px; margin-bottom:6px; }
+    .login-box p  { font-size:13px; opacity:0.6; margin-bottom:28px; }
+    .login-box input {
+      width:100%; padding:12px 16px; background:#111; border:1px solid #333;
+      border-radius:10px; color:#fff; font-size:14px; margin-bottom:14px; outline:none;
+      transition:border-color 0.3s;
+    }
+    .login-box input:focus { border-color:#ff2b2b; }
+    .login-box button {
+      width:100%; padding:13px; background:#ff2b2b; color:#fff; border:none;
+      border-radius:10px; font-size:15px; font-weight:600; cursor:pointer;
+      transition:background 0.3s, transform 0.2s;
+    }
+    .login-box button:hover { background:#e00; transform:scale(1.02); }
+    .login-err { color:#ff4444; font-size:13px; margin-top:10px; display:none; }
+
+    /* DASHBOARD */
+    #dashboard { display:none; }
+
+    header {
+      background:#111; border-bottom:2px solid #ff2b2b;
+      padding:14px 24px; display:flex; align-items:center;
+      justify-content:space-between; position:sticky; top:0; z-index:100;
+    }
+    .header-left { display:flex; align-items:center; gap:12px; }
+    .header-left img { height:46px; border-radius:6px; }
+    .header-left h1 { font-size:18px; color:#ff2b2b; }
+    .header-left span { font-size:12px; opacity:0.5; display:block; }
+    .logout-btn {
+      background:transparent; border:1px solid #ff2b2b; color:#ff2b2b;
+      padding:8px 18px; border-radius:8px; cursor:pointer; font-size:13px;
+      font-weight:600; transition:all 0.3s;
+    }
+    .logout-btn:hover { background:#ff2b2b; color:#fff; }
+
+    .dashboard-body { padding:24px; max-width:1200px; margin:0 auto; }
+
+    /* STATS */
+    .stats-grid {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+      gap:16px; margin-bottom:28px;
+    }
+    .stat-card {
+      background:#181818; border:1px solid #222; border-radius:14px;
+      padding:20px 18px; text-align:center;
+    }
+    .stat-card i { font-size:26px; color:#ff2b2b; margin-bottom:8px; display:block; }
+    .stat-card .num { font-size:28px; font-weight:700; color:#fff; }
+    .stat-card .lbl { font-size:12px; opacity:0.55; margin-top:2px; }
+
+    /* CONTROLS */
+    .controls {
+      display:flex; flex-wrap:wrap; gap:12px;
+      align-items:center; margin-bottom:20px;
+    }
+    .controls input {
+      flex:1; min-width:200px; padding:10px 16px; background:#181818;
+      border:1px solid #333; border-radius:10px; color:#fff; font-size:14px; outline:none;
+    }
+    .controls input:focus { border-color:#ff2b2b; }
+    .filter-select {
+      padding:10px 14px; background:#181818; border:1px solid #333;
+      border-radius:10px; color:#fff; font-size:14px; outline:none; cursor:pointer;
+    }
+    .refresh-btn {
+      padding:10px 18px; background:#ff2b2b; color:#fff; border:none;
+      border-radius:10px; font-size:14px; font-weight:600; cursor:pointer;
+      display:flex; align-items:center; gap:6px; transition:background 0.3s;
+    }
+    .refresh-btn:hover { background:#e00; }
+
+    /* TABLE */
+    .table-wrap { overflow-x:auto; border-radius:14px; border:1px solid #222; }
+    table { width:100%; border-collapse:collapse; font-size:14px; }
+    thead { background:#1a1a1a; }
+    thead th {
+      padding:14px 16px; text-align:left; color:#ff2b2b;
+      font-weight:600; white-space:nowrap; border-bottom:1px solid #2a2a2a;
+    }
+    tbody tr { border-bottom:1px solid #1e1e1e; transition:background 0.2s; }
+    tbody tr:hover { background:#161616; }
+    tbody td { padding:14px 16px; vertical-align:top; }
+    .order-id { font-size:11px; color:#888; font-family:monospace; }
+    .items-list { font-size:13px; line-height:1.7; }
+    .items-list span { display:block; }
+    .amount { color:#ff2b2b; font-weight:700; font-size:15px; }
+    .time-cell { font-size:12px; opacity:0.6; white-space:nowrap; }
+
+    /* STATUS BADGE */
+    .status-badge {
+      display:inline-block; padding:4px 12px; border-radius:20px;
+      font-size:12px; font-weight:600;
+    }
+    .status-Pending   { background:rgba(255,193,7,0.15);  color:#ffc107; border:1px solid #ffc10740; }
+    .status-Preparing { background:rgba(33,150,243,0.15); color:#2196f3; border:1px solid #2196f340; }
+    .status-Completed { background:rgba(76,175,80,0.15);  color:#4caf50; border:1px solid #4caf5040; }
+
+    /* STATUS SELECT */
+    .status-select {
+      padding:6px 10px; border-radius:8px; border:1px solid #333;
+      background:#111; color:#fff; font-size:13px; cursor:pointer; outline:none;
+      margin-top:6px;
+    }
+
+    /* DELETE BTN */
+    .del-btn {
+      background:transparent; border:1px solid #ff2b2b; color:#ff2b2b;
+      padding:5px 10px; border-radius:6px; cursor:pointer; font-size:12px;
+      transition:all 0.2s; margin-top:6px;
+    }
+    .del-btn:hover { background:#ff2b2b; color:#fff; }
+
+    /* EMPTY / LOADING */
+    .empty-row td {
+      text-align:center; padding:50px; opacity:0.4; font-size:15px;
+    }
+
+    /* TOAST */
+    #adminToast {
+      position:fixed; bottom:24px; right:24px; background:#181818;
+      border-left:4px solid #4caf50; color:#fff; padding:14px 20px;
+      border-radius:10px; font-size:14px; z-index:9999;
+      transform:translateX(120%); transition:transform 0.4s;
+      box-shadow:0 5px 20px rgba(0,0,0,0.5);
+    }
+    #adminToast.show { transform:translateX(0); }
+
+    @media(max-width:600px) {
+      .dashboard-body { padding:14px; }
+      thead th, tbody td { padding:10px 10px; font-size:12px; }
+      .header-left h1 { font-size:15px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <img src="../assets/Logo.png" alt="Logo"/>
+    <h2>Admin Login</h2>
+    <p>Laxmi Fast Food – Order Dashboard</p>
+    <input type="password" id="adminPass" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')login()"/>
+    <button onclick="login()"><i class="fas fa-sign-in-alt"></i> Login</button>
+    <p class="login-err" id="loginErr">Incorrect password. Try again.</p>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <header>
+    <div class="header-left">
+      <img src="../assets/Logo.png" alt="Logo"/>
+      <div>
+        <h1>🔥 Admin Dashboard</h1>
+        <span>Laxmi Fast Food – Shankar Nagar</span>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </header>
+
+  <div class="dashboard-body">
+
+    <!-- STATS -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card">
+        <i class="fas fa-receipt"></i>
+        <div class="num" id="statTotal">0</div>
+        <div class="lbl">Total Orders</div>
+      </div>
+      <div class="stat-card">
+        <i class="fas fa-clock"></i>
+        <div class="num" id="statPending">0</div>
+        <div class="lbl">Pending</div>
+      </div>
+      <div class="stat-card">
+        <i class="fas fa-fire"></i>
+        <div class="num" id="statPreparing">0</div>
+        <div class="lbl">Preparing</div>
+      </div>
+      <div class="stat-card">
+        <i class="fas fa-check-circle"></i>
+        <div class="num" id="statCompleted">0</div>
+        <div class="lbl">Completed</div>
+      </div>
+      <div class="stat-card">
+        <i class="fas fa-rupee-sign"></i>
+        <div class="num" id="statRevenue">0</div>
+        <div class="lbl">Total Revenue</div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls">
+      <input type="text" id="searchInput" placeholder="🔍 Search by name or phone..." oninput="renderTable()"/>
+      <select class="filter-select" id="statusFilter" onchange="renderTable()">
+        <option value="all">All Status</option>
+        <option value="Pending">Pending</option>
+        <option value="Preparing">Preparing</option>
+        <option value="Completed">Completed</option>
+      </select>
+      <button class="refresh-btn" onclick="loadOrders()"><i class="fas fa-sync-alt"></i> Refresh</button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Phone</th>
+            <th>Address</th>
+            <th>Items Ordered</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Time</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="ordersBody">
+          <tr class="empty-row"><td colspan="10">Loading orders...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<div id="adminToast"></div>
+
+<script>
+  // ── CONFIG ──────────────────────────────────────────────
+  const API = 'http://localhost:5000/api/orders';
+  const ADMIN_PASS = 'laxmi@admin123'; // change to match .env
+
+  let allOrders = [];
+
+  // ── AUTH ────────────────────────────────────────────────
+  function login() {
+    const pass = document.getElementById('adminPass').value;
+    if (pass === ADMIN_PASS) {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      loadOrders();
+    } else {
+      document.getElementById('loginErr').style.display = 'block';
+    }
+  }
+
+  function logout() {
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('adminPass').value = '';
+  }
+
+  // ── LOAD ORDERS ─────────────────────────────────────────
+  async function loadOrders() {
+    try {
+      const res = await fetch(API);
+      allOrders = await res.json();
+      updateStats();
+      renderTable();
+    } catch {
+      showToast('❌ Could not connect to server.', '#ff4444');
+    }
+  }
+
+  // ── STATS ───────────────────────────────────────────────
+  function updateStats() {
+    document.getElementById('statTotal').textContent     = allOrders.length;
+    document.getElementById('statPending').textContent   = allOrders.filter(o => o.orderStatus === 'Pending').length;
+    document.getElementById('statPreparing').textContent = allOrders.filter(o => o.orderStatus === 'Preparing').length;
+    document.getElementById('statCompleted').textContent = allOrders.filter(o => o.orderStatus === 'Completed').length;
+    const rev = allOrders.reduce((s, o) => s + o.totalAmount, 0);
+    document.getElementById('statRevenue').textContent   = '₹' + rev;
+  }
+
+  // ── RENDER TABLE ─────────────────────────────────────────
+  function renderTable() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const filter = document.getElementById('statusFilter').value;
+
+    let filtered = allOrders.filter(o => {
+      const matchSearch = o.customerName.toLowerCase().includes(search) || o.phoneNumber.includes(search);
+      const matchFilter = filter === 'all' || o.orderStatus === filter;
+      return matchSearch && matchFilter;
+    });
+
+    const tbody = document.getElementById('ordersBody');
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="10">No orders found.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = filtered.map((o, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td><span class="order-id">${o._id.slice(-8).toUpperCase()}</span></td>
+        <td><strong>${o.customerName}</strong></td>
+        <td>${o.phoneNumber}</td>
+        <td style="max-width:160px;font-size:12px;opacity:0.8">${o.address}</td>
+        <td>
+          <div class="items-list">
+            ${o.itemsOrdered.map(it => `<span>• ${it.name} x${it.quantity} — ₹${it.price * it.quantity}</span>`).join('')}
+          </div>
+        </td>
+        <td><span class="amount">₹${o.totalAmount}</span></td>
+        <td>
+          <span class="status-badge status-${o.orderStatus}">${o.orderStatus}</span><br/>
+          <select class="status-select" onchange="updateStatus('${o._id}', this.value)">
+            <option value="Pending"   ${o.orderStatus==='Pending'   ? 'selected':''}>Pending</option>
+            <option value="Preparing" ${o.orderStatus==='Preparing' ? 'selected':''}>Preparing</option>
+            <option value="Completed" ${o.orderStatus==='Completed' ? 'selected':''}>Completed</option>
+          </select>
+        </td>
+        <td class="time-cell">${new Date(o.orderTime).toLocaleString('en-IN')}</td>
+        <td><button class="del-btn" onclick="deleteOrder('${o._id}')"><i class="fas fa-trash"></i></button></td>
+      </tr>
+    `).join('');
+  }
+
+  // ── UPDATE STATUS ────────────────────────────────────────
+  async function updateStatus(id, status) {
+    try {
+      await fetch(`${API}/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      const order = allOrders.find(o => o._id === id);
+      if (order) order.orderStatus = status;
+      updateStats();
+      renderTable();
+      showToast(`✅ Status updated to ${status}`);
+    } catch {
+      showToast('❌ Failed to update status.', '#ff4444');
+    }
+  }
+
+  // ── DELETE ORDER ─────────────────────────────────────────
+  async function deleteOrder(id) {
+    if (!confirm('Delete this order?')) return;
+    try {
+      await fetch(`${API}/${id}`, { method: 'DELETE' });
+      allOrders = allOrders.filter(o => o._id !== id);
+      updateStats();
+      renderTable();
+      showToast('🗑️ Order deleted.');
+    } catch {
+      showToast('❌ Failed to delete.', '#ff4444');
+    }
+  }
+
+  // ── TOAST ────────────────────────────────────────────────
+  function showToast(msg, color = '#4caf50') {
+    const t = document.getElementById('adminToast');
+    t.textContent = msg;
+    t.style.borderLeftColor = color;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // Auto-refresh every 30 seconds
+  setInterval(() => {
+    if (document.getElementById('dashboard').style.display !== 'none') loadOrders();
+  }, 30000);
+</script>
+</body>
+</html>
