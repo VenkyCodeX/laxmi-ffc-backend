@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Customer Reviews – Laxmi Fast Food</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Poppins',sans-serif; background:#0d0d0d; color:#fff; min-height:100vh; }
+
+    /* LOGIN */
+    #loginScreen {
+      display:flex; align-items:center; justify-content:center;
+      min-height:100vh; background:linear-gradient(135deg,#1a0000,#0d0d0d);
+    }
+    .login-box {
+      background:#181818; border:1px solid #2a2a2a; border-radius:16px;
+      padding:40px 36px; width:100%; max-width:380px; text-align:center;
+    }
+    .login-box img { height:80px; width:auto; margin-bottom:6px; border-radius:10px; object-fit:contain; display:block; margin-left:auto; margin-right:auto; }
+    .login-box .brand { font-size:18px; font-weight:800; color:#ff2b2b; letter-spacing:2px; margin-bottom:4px; }
+    .login-box h2 { font-size:16px; margin-bottom:20px; opacity:0.7; }
+    .login-box input {
+      width:100%; padding:12px 16px; background:#111; border:1px solid #333;
+      border-radius:10px; color:#fff; font-size:14px; margin-bottom:14px; outline:none;
+    }
+    .login-box input:focus { border-color:#ff2b2b; }
+    .login-box button {
+      width:100%; padding:13px; background:#ff2b2b; color:#fff; border:none;
+      border-radius:10px; font-size:15px; font-weight:600; cursor:pointer;
+    }
+    .login-err { color:#ff4444; font-size:13px; margin-top:10px; display:none; }
+
+    /* HEADER */
+    #page { display:none; }
+    header {
+      background:#111; border-bottom:2px solid #ff2b2b;
+      padding:14px 24px; display:flex; align-items:center;
+      justify-content:space-between; position:sticky; top:0; z-index:100;
+    }
+    .header-left { display:flex; align-items:center; gap:14px; }
+    .header-left img { height:46px; width:auto; border-radius:8px; object-fit:contain; }
+    .header-left h1 { font-size:17px; color:#ff2b2b; margin-bottom:2px; }
+    .header-left span { font-size:12px; opacity:0.5; display:block; }
+    .header-btns { display:flex; gap:10px; }
+    .hdr-btn {
+      background:transparent; border:1px solid #ff2b2b; color:#ff2b2b;
+      padding:8px 16px; border-radius:8px; cursor:pointer; font-size:13px;
+      font-weight:600; transition:all 0.3s; text-decoration:none;
+      display:inline-flex; align-items:center; gap:6px;
+    }
+    .hdr-btn:hover { background:#ff2b2b; color:#fff; }
+
+    .wrap { padding:24px; max-width:900px; margin:0 auto; }
+
+    /* SUMMARY */
+    .summary-box {
+      background:#181818; border:1px solid #222; border-radius:16px;
+      padding:20px; margin-bottom:24px;
+      display:flex; align-items:center; gap:24px; flex-wrap:wrap;
+    }
+    .avg-score { font-size:52px; font-weight:700; color:#ffc107; line-height:1; }
+    .avg-stars { font-size:22px; color:#ffc107; margin:6px 0 4px; }
+    .avg-count { font-size:13px; opacity:0.5; }
+    .bars { flex:1; min-width:180px; display:flex; flex-direction:column; gap:7px; }
+    .bar-row { display:flex; align-items:center; gap:10px; font-size:13px; }
+    .bar-row .lbl { width:16px; text-align:right; opacity:0.7; }
+    .bar-bg { flex:1; height:8px; background:#2a2a2a; border-radius:4px; overflow:hidden; }
+    .bar-fill { height:100%; background:#ffc107; border-radius:4px; transition:width 0.5s; }
+    .bar-row .cnt { width:24px; opacity:0.5; font-size:12px; }
+
+    /* DATE FILTER */
+    .filter-bar {
+      display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:20px;
+    }
+    .filter-bar input[type=date] {
+      padding:10px 14px; background:#181818; border:1px solid #333;
+      border-radius:10px; color:#fff; font-size:14px; outline:none;
+    }
+    .filter-bar input[type=date]:focus { border-color:#ffc107; }
+    .star-filters { display:flex; gap:8px; flex-wrap:wrap; }
+    .sf-btn {
+      padding:6px 14px; border-radius:20px; border:1px solid #333;
+      background:transparent; color:#aaa; font-size:12px; font-weight:600;
+      cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s;
+    }
+    .sf-btn.active { background:#ffc107; border-color:#ffc107; color:#000; }
+    .clear-btn {
+      padding:8px 16px; background:#222; border:1px solid #333; color:#aaa;
+      border-radius:10px; font-size:13px; cursor:pointer; font-family:'Poppins',sans-serif;
+    }
+    .clear-btn:hover { background:#333; color:#fff; }
+
+    /* DATE GROUP */
+    .date-group { margin-bottom:28px; }
+    .date-group-label {
+      font-size:13px; font-weight:700; color:#ffc107;
+      display:flex; align-items:center; gap:8px;
+      margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid #222;
+    }
+    .date-group-label span { opacity:0.5; font-weight:400; font-size:12px; }
+
+    /* REVIEW CARD */
+    .rc {
+      background:#181818; border:1px solid #2a2a2a; border-radius:14px;
+      padding:16px 18px; margin-bottom:10px; animation:fadeUp 0.3s ease;
+    }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .rc-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:8px; }
+    .rc-customer strong { font-size:14px; }
+    .rc-customer .rc-phone { font-size:12px; opacity:0.5; margin-top:3px; }
+    .rc-customer .rc-phone i { margin-right:4px; }
+    .rc-stars { color:#ffc107; font-size:18px; white-space:nowrap; flex-shrink:0; }
+    .rc-meta { font-size:11px; opacity:0.4; margin-bottom:8px; font-family:monospace; }
+    .rc-text {
+      font-size:13px; opacity:0.8; line-height:1.7; font-style:italic;
+      background:#111; border-radius:8px; padding:10px 14px;
+      border-left:3px solid #ffc10766;
+    }
+    .rc-no-text { font-size:12px; opacity:0.3; font-style:italic; }
+
+    /* EMPTY */
+    .empty-box { text-align:center; padding:50px 20px; opacity:0.4; }
+    .empty-box i { font-size:44px; color:#ffc107; display:block; margin-bottom:14px; }
+    .empty-box p { font-size:15px; font-weight:600; }
+    .empty-box span { font-size:13px; }
+
+    /* TOAST */
+    #toast {
+      position:fixed; bottom:24px; right:24px; background:#181818;
+      border-left:4px solid #4caf50; color:#fff; padding:14px 20px;
+      border-radius:10px; font-size:14px; z-index:9999;
+      transform:translateX(120%); transition:transform 0.4s;
+    }
+    #toast.show { transform:translateX(0); }
+
+    @media(max-width:600px) {
+      .wrap { padding:14px; }
+      header { padding:10px 14px; }
+      .header-left img { height:36px; }
+      .header-left h1 { font-size:14px; }
+      .summary-box { flex-direction:column; gap:14px; }
+      .avg-score { font-size:40px; }
+      .filter-bar { flex-direction:column; align-items:stretch; }
+      .filter-bar input[type=date] { width:100%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <img src="Logo.png" alt="Logo"/>
+    <div class="brand">🔥 LAXMI FAST FOOD</div>
+    <h2>Admin – Reviews Panel</h2>
+    <input type="password" id="adminPass" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')login()"/>
+    <button onclick="login()"><i class="fas fa-sign-in-alt"></i> Login</button>
+    <p class="login-err" id="loginErr">Incorrect password.</p>
+  </div>
+</div>
+
+<!-- PAGE -->
+<div id="page">
+  <header>
+    <div class="header-left">
+      <img src="Logo.png" alt="Logo"/>
+      <div>
+        <h1>⭐ Customer Reviews</h1>
+        <span>Laxmi Fast Food – Shankar Nagar</span>
+      </div>
+    </div>
+    <div class="header-btns">
+      <a href="index.html" class="hdr-btn"><i class="fas fa-arrow-left"></i> Dashboard</a>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <!-- SUMMARY -->
+    <div class="summary-box" id="summaryBox">
+      <div style="text-align:center">
+        <div class="avg-score" id="avgScore">–</div>
+        <div class="avg-stars" id="avgStars"></div>
+        <div class="avg-count" id="avgCount">No reviews yet</div>
+      </div>
+      <div class="bars" id="barsEl"></div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filter-bar">
+      <input type="date" id="dateFilter" onchange="applyFilters()"/>
+      <div class="star-filters">
+        <button class="sf-btn active" onclick="setStar(0,this)">All</button>
+        <button class="sf-btn" onclick="setStar(5,this)">⭐⭐⭐⭐⭐</button>
+        <button class="sf-btn" onclick="setStar(4,this)">⭐⭐⭐⭐</button>
+        <button class="sf-btn" onclick="setStar(3,this)">⭐⭐⭐</button>
+        <button class="sf-btn" onclick="setStar(2,this)">⭐⭐</button>
+        <button class="sf-btn" onclick="setStar(1,this)">⭐</button>
+      </div>
+      <button class="clear-btn" onclick="clearFilters()"><i class="fas fa-times"></i> Clear</button>
+    </div>
+
+    <!-- REVIEWS LIST -->
+    <div id="reviewsArea"></div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:5000/api/orders'
+    : 'https://laxmi-ffc-backend.onrender.com/api/orders';
+  const ADMIN_PASS = 'laxmi@admin123';
+
+  let allOrders = [];
+  let starFilter = 0;
+
+  function login() {
+    if (document.getElementById('adminPass').value === ADMIN_PASS) {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('page').style.display = 'block';
+      loadReviews();
+    } else {
+      document.getElementById('loginErr').style.display = 'block';
+    }
+  }
+
+  async function loadReviews() {
+    try {
+      const res = await fetch(API);
+      allOrders = await res.json();
+      renderSummary();
+      applyFilters();
+    } catch {
+      showToast('❌ Could not connect to server.', '#ff4444');
+    }
+  }
+
+  function renderSummary() {
+    const reviewed = allOrders.filter(o => o.rating);
+    if (!reviewed.length) {
+      document.getElementById('avgScore').textContent = '–';
+      document.getElementById('avgStars').textContent = '';
+      document.getElementById('avgCount').textContent = 'No reviews yet';
+      document.getElementById('barsEl').innerHTML = '';
+      return;
+    }
+    const avg = (reviewed.reduce((s, o) => s + o.rating, 0) / reviewed.length).toFixed(1);
+    document.getElementById('avgScore').textContent = avg;
+    document.getElementById('avgStars').textContent = '⭐'.repeat(Math.round(avg));
+    document.getElementById('avgCount').textContent = reviewed.length + ' total review(s)';
+    document.getElementById('barsEl').innerHTML = [5,4,3,2,1].map(n => {
+      const cnt = reviewed.filter(o => o.rating === n).length;
+      const pct = Math.round(cnt / reviewed.length * 100);
+      return `<div class="bar-row">
+        <span class="lbl">${n}</span>
+        <div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div>
+        <span class="cnt">${cnt}</span>
+      </div>`;
+    }).join('');
+  }
+
+  function applyFilters() {
+    const dateVal = document.getElementById('dateFilter').value;
+    let reviews = allOrders.filter(o => o.rating);
+
+    if (starFilter) reviews = reviews.filter(o => o.rating === starFilter);
+    if (dateVal)    reviews = reviews.filter(o => new Date(o.orderTime).toISOString().slice(0,10) === dateVal);
+
+    renderReviews(reviews, dateVal);
+  }
+
+  function renderReviews(reviews, dateVal) {
+    const area = document.getElementById('reviewsArea');
+    if (!reviews.length) {
+      area.innerHTML = `<div class="empty-box">
+        <i class="fas fa-star"></i>
+        <p>No reviews found</p>
+        <span>${dateVal ? 'No reviews on this date.' : 'No reviews match the filter.'}</span>
+      </div>`;
+      return;
+    }
+
+    // Group by date
+    const groups = {};
+    reviews.forEach(o => {
+      const d = new Date(o.orderTime).toISOString().slice(0,10);
+      if (!groups[d]) groups[d] = [];
+      groups[d].push(o);
+    });
+
+    // Sort dates newest first
+    const sortedDates = Object.keys(groups).sort((a,b) => b.localeCompare(a));
+    const todayStr = new Date().toISOString().slice(0,10);
+
+    area.innerHTML = sortedDates.map(date => {
+      const label = date === todayStr
+        ? 'Today'
+        : new Date(date).toLocaleDateString('en-IN', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+      const dayReviews = groups[date];
+      const dayAvg = (dayReviews.reduce((s,o) => s + o.rating, 0) / dayReviews.length).toFixed(1);
+
+      return `<div class="date-group">
+        <div class="date-group-label">
+          <i class="fas fa-calendar-day"></i> ${label}
+          <span>${dayReviews.length} review(s) · avg ${dayAvg}⭐</span>
+        </div>
+        ${dayReviews.map(o => reviewCard(o)).join('')}
+      </div>`;
+    }).join('');
+  }
+
+  function reviewCard(o) {
+    const stars    = '⭐'.repeat(o.rating) + `<span style="opacity:0.2">${'⭐'.repeat(5 - o.rating)}</span>`;
+    const timeStr  = new Date(o.orderTime).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+    const orderId  = o.orderId || o._id.slice(-8).toUpperCase();
+    return `<div class="rc">
+      <div class="rc-top">
+        <div class="rc-customer">
+          <strong><i class="fas fa-user" style="color:#ff2b2b;margin-right:6px"></i>${o.customerName}</strong>
+          <div class="rc-phone"><i class="fas fa-phone"></i>${o.phoneNumber}</div>
+        </div>
+        <div class="rc-stars">${stars}</div>
+      </div>
+      <div class="rc-meta">🆔 ${orderId} &nbsp;·&nbsp; 🕐 ${timeStr}</div>
+      ${o.review
+        ? `<div class="rc-text">"${o.review}"</div>`
+        : `<div class="rc-no-text">No written review</div>`}
+    </div>`;
+  }
+
+  function setStar(n, btn) {
+    starFilter = n;
+    document.querySelectorAll('.sf-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilters();
+  }
+
+  function clearFilters() {
+    starFilter = 0;
+    document.getElementById('dateFilter').value = '';
+    document.querySelectorAll('.sf-btn').forEach((b,i) => b.classList.toggle('active', i === 0));
+    applyFilters();
+  }
+
+  function showToast(msg, color = '#4caf50') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.borderLeftColor = color;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+</script>
+</body>
+</html>

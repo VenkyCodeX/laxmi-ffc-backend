@@ -12,8 +12,12 @@ app.use(express.json());
 // Serve admin dashboard as static files
 app.use('/admin', express.static(path.join(__dirname, 'admin')));
 
+// Serve assets folder (logo etc)
+app.use('/assets', express.static(path.join(__dirname, '..', 'assets')));
+
 // API routes
 app.use('/api/orders', require('./routes/orders'));
+app.use('/api/otp',    require('./routes/otp'));
 
 // Health check
 app.get('/', (req, res) => res.json({ status: 'Laxmi Fast Food API running 🔥' }));

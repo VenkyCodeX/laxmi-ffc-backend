@@ -6,6 +6,7 @@
   <title>Admin – Laxmi Fast Food</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:'Poppins',sans-serif; background:#0d0d0d; color:#fff; min-height:100vh; }
@@ -19,8 +20,9 @@
       background:#181818; border:1px solid #2a2a2a; border-radius:16px;
       padding:40px 36px; width:100%; max-width:380px; text-align:center;
     }
-    .login-box img { height:70px; margin-bottom:16px; border-radius:8px; }
-    .login-box h2 { font-size:22px; margin-bottom:6px; }
+    .login-box img { height:100px; width:auto; margin-bottom:6px; border-radius:10px; object-fit:contain; display:block; margin-left:auto; margin-right:auto; }
+    .login-box .brand { font-family:sans-serif; font-size:20px; font-weight:800; color:#ff2b2b; letter-spacing:2px; margin-bottom:4px; }
+    .login-box h2 { font-size:18px; margin-bottom:4px; }
     .login-box p  { font-size:13px; opacity:0.6; margin-bottom:28px; }
     .login-box input {
       width:100%; padding:12px 16px; background:#111; border:1px solid #333;
@@ -44,9 +46,9 @@
       padding:14px 24px; display:flex; align-items:center;
       justify-content:space-between; position:sticky; top:0; z-index:100;
     }
-    .header-left { display:flex; align-items:center; gap:12px; }
-    .header-left img { height:46px; border-radius:6px; }
-    .header-left h1 { font-size:18px; color:#ff2b2b; }
+    .header-left { display:flex; align-items:center; gap:14px; }
+    .header-left img { height:56px; width:auto; border-radius:8px; object-fit:contain; }
+    .header-left h1 { font-size:18px; color:#ff2b2b; margin-bottom:2px; }
     .header-left span { font-size:12px; opacity:0.5; display:block; }
     .logout-btn {
       background:transparent; border:1px solid #ff2b2b; color:#ff2b2b;
@@ -113,8 +115,9 @@
       display:inline-block; padding:4px 12px; border-radius:20px;
       font-size:12px; font-weight:600;
     }
-    .status-Pending   { background:rgba(255,193,7,0.15);  color:#ffc107; border:1px solid #ffc10740; }
+    .status-Order-Received { background:rgba(255,193,7,0.15);  color:#ffc107; border:1px solid #ffc10740; }
     .status-Preparing { background:rgba(33,150,243,0.15); color:#2196f3; border:1px solid #2196f340; }
+    .status-Ready     { background:rgba(156,39,176,0.15); color:#ce93d8; border:1px solid #9c27b040; }
     .status-Completed { background:rgba(76,175,80,0.15);  color:#4caf50; border:1px solid #4caf5040; }
 
     /* STATUS SELECT */
@@ -132,12 +135,31 @@
     }
     .del-btn:hover { background:#ff2b2b; color:#fff; }
 
-    /* EMPTY / LOADING */
+    .print-btn {
+      background:transparent; border:1px solid #2196f3; color:#2196f3;
+      padding:5px 10px; border-radius:6px; cursor:pointer; font-size:12px;
+      transition:all 0.2s; margin-top:4px;
+    }
+    .print-btn:hover { background:#2196f3; color:#fff; }
     .empty-row td {
       text-align:center; padding:50px; opacity:0.4; font-size:15px;
     }
 
-    /* TOAST */
+    /* DATE BADGE */
+    .date-badge {
+      display:inline-flex; align-items:center; gap:8px;
+      background:#ff2b2b22; border:1px solid #ff2b2b44; color:#ff2b2b;
+      padding:6px 14px; border-radius:20px; font-size:13px; font-weight:600;
+    }
+    .date-badge button {
+      background:none; border:none; color:#ff2b2b; cursor:pointer;
+      font-size:14px; padding:0; line-height:1;
+    }
+    .table-header {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:12px; flex-wrap:wrap; gap:10px;
+    }
+    .table-header h3 { font-size:15px; font-weight:700; color:#fff; }
     #adminToast {
       position:fixed; bottom:24px; right:24px; background:#181818;
       border-left:4px solid #4caf50; color:#fff; padding:14px 20px;
@@ -147,10 +169,138 @@
     }
     #adminToast.show { transform:translateX(0); }
 
-    @media(max-width:600px) {
-      .dashboard-body { padding:14px; }
-      thead th, tbody td { padding:10px 10px; font-size:12px; }
-      .header-left h1 { font-size:15px; }
+    /* CHART SECTION */
+    .chart-section {
+      background:#181818; border:1px solid #222; border-radius:14px;
+      padding:20px; margin-bottom:24px;
+    }
+    .chart-section h3 { font-size:15px; color:#ff2b2b; margin-bottom:6px; }
+    .chart-top { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
+    .chart-tabs { display:flex; gap:8px; }
+    .chart-tab {
+      padding:6px 14px; border-radius:20px; border:1px solid #333;
+      background:transparent; color:#aaa; font-size:12px; font-weight:600;
+      cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s;
+    }
+    .chart-tab.active { background:#ff2b2b; border-color:#ff2b2b; color:#fff; }
+    .chart-year-select {
+      padding:6px 12px; background:#111; border:1px solid #333;
+      border-radius:10px; color:#fff; font-size:13px; outline:none; cursor:pointer;
+    }
+
+    /* REVENUE SECTION */
+    .revenue-section {
+      background:#181818; border:1px solid #222; border-radius:14px;
+      padding:20px; margin-bottom:24px;
+    }
+    .revenue-section h3 { font-size:15px; color:#ff2b2b; margin-bottom:16px; }
+    .revenue-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .rev-card {
+      background:#111; border:1px solid #2a2a2a; border-radius:12px;
+      padding:16px; text-align:center;
+    }
+    .rev-card i { font-size:22px; color:#ff2b2b; margin-bottom:8px; display:block; }
+    .rev-card .rev-num { font-size:24px; font-weight:700; color:#fff; }
+    .rev-card .rev-lbl { font-size:11px; opacity:0.5; margin-top:4px; }
+    .rev-lookup {
+      margin-top:16px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+    .rev-lookup input {
+      flex:1; min-width:160px; padding:10px 14px; background:#111;
+      border:1px solid #333; border-radius:10px; color:#fff; font-size:14px; outline:none;
+    }
+    .rev-lookup input:focus { border-color:#ff2b2b; }
+    .rev-lookup button {
+      padding:10px 18px; background:#ff2b2b; color:#fff; border:none;
+      border-radius:10px; font-size:14px; font-weight:600; cursor:pointer;
+    }
+    .rev-result {
+      margin-top:14px; padding:14px 18px; background:#111;
+      border-radius:10px; border:1px solid #2a2a2a; display:none;
+    }
+    .rev-result .rev-date { font-size:12px; opacity:0.5; margin-bottom:6px; }
+    .rev-result .rev-amount { font-size:28px; font-weight:700; color:#ff2b2b; }
+    .rev-result .rev-orders { font-size:13px; opacity:0.6; margin-top:4px; }
+
+    /* REVIEWS SECTION */
+    .reviews-section {
+      background:#181818; border:1px solid #222; border-radius:14px;
+      padding:20px; margin-bottom:24px;
+    }
+    .reviews-section h3 { font-size:15px; color:#ff2b2b; margin-bottom:16px; }
+    .reviews-summary {
+      display:flex; align-items:center; gap:20px;
+      background:#111; border:1px solid #2a2a2a; border-radius:12px;
+      padding:16px 20px; margin-bottom:16px; flex-wrap:wrap;
+    }
+    .rev-avg { font-size:42px; font-weight:700; color:#ffc107; line-height:1; }
+    .rev-avg-stars { font-size:18px; color:#ffc107; margin:4px 0; }
+    .rev-avg-count { font-size:12px; opacity:0.5; }
+    .rev-bars { flex:1; min-width:160px; display:flex; flex-direction:column; gap:5px; }
+    .rev-bar-row { display:flex; align-items:center; gap:8px; font-size:12px; }
+    .rev-bar-row span:first-child { width:14px; text-align:right; opacity:0.7; }
+    .rev-bar-bg { flex:1; height:6px; background:#2a2a2a; border-radius:4px; overflow:hidden; }
+    .rev-bar-fill { height:100%; background:#ffc107; border-radius:4px; transition:width 0.4s; }
+    .rev-bar-row span:last-child { width:20px; opacity:0.5; font-size:11px; }
+    .review-card-admin {
+      background:#111; border:1px solid #2a2a2a; border-radius:12px;
+      padding:14px 16px; margin-bottom:10px; animation:fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .rca-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:8px; }
+    .rca-customer strong { font-size:14px; }
+    .rca-customer span { font-size:12px; opacity:0.5; display:block; margin-top:2px; }
+    .rca-stars { color:#ffc107; font-size:16px; white-space:nowrap; }
+    .rca-order { font-size:11px; opacity:0.4; margin-bottom:6px; font-family:monospace; }
+    .rca-text { font-size:13px; opacity:0.75; line-height:1.6; font-style:italic; }
+    .rca-text:empty::before { content:'No written review'; opacity:0.3; font-style:normal; }
+    .rev-empty { text-align:center; padding:30px; opacity:0.4; font-size:14px; }
+    .rev-filter-row { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+    .rev-filter-btn {
+      padding:5px 14px; border-radius:20px; border:1px solid #333;
+      background:transparent; color:#aaa; font-size:12px; font-weight:600;
+      cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s;
+    }
+    .rev-filter-btn.active { background:#ffc107; border-color:#ffc107; color:#000; }
+
+    @media(max-width:600px) { .reviews-summary { flex-direction:column; gap:12px; } }
+      .login-box { padding: 28px 18px; margin: 16px; }
+
+      header { padding: 10px 14px; }
+      .header-left img { height: 38px; }
+      .header-left h1 { font-size: 14px; }
+      .header-left span { font-size: 10px; }
+      .logout-btn { padding: 6px 12px; font-size: 12px; }
+
+      .dashboard-body { padding: 12px; }
+
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+      .stat-card { padding: 14px 10px; }
+      .stat-card i { font-size: 20px; }
+      .stat-card .num { font-size: 22px; }
+      .stat-card .lbl { font-size: 11px; }
+
+      .revenue-section { padding: 14px; }
+      .rev-card .rev-num { font-size: 18px; }
+      .rev-lookup { flex-direction: column; }
+      .rev-lookup input, .rev-lookup button { width: 100%; }
+
+      .controls { gap: 8px; }
+      .controls input, .filter-select, .refresh-btn { width: 100%; min-width: unset; }
+
+      .table-header h3 { font-size: 13px; }
+
+      /* Mobile: horizontal scroll table */
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 10px; }
+      table { min-width: 900px; font-size: 12px; }
+      thead th, tbody td { padding: 10px 8px; }
+      tbody td { white-space: normal; vertical-align: top; }
+      tbody td:nth-child(3), tbody td:nth-child(5) { min-width: 110px; word-break: break-word; }
+      tbody td:nth-child(6) { min-width: 140px; }
+      tbody td:nth-child(8) { min-width: 130px; }
+      .status-select { width: 100%; font-size: 11px; }
+
+      #adminToast { right: 12px; left: 12px; bottom: 16px; font-size: 13px; }
     }
   </style>
 </head>
@@ -159,7 +309,8 @@
 <!-- LOGIN -->
 <div id="loginScreen">
   <div class="login-box">
-    <img src="../assets/Logo.png" alt="Logo"/>
+    <img src="Logo.png" alt="Logo"/>
+    <div class="brand">🔥 LAXMI FAST FOOD</div>
     <h2>Admin Login</h2>
     <p>Laxmi Fast Food – Order Dashboard</p>
     <input type="password" id="adminPass" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')login()"/>
@@ -172,13 +323,14 @@
 <div id="dashboard">
   <header>
     <div class="header-left">
-      <img src="../assets/Logo.png" alt="Logo"/>
+      <img src="Logo.png" alt="Logo"/>
       <div>
         <h1>🔥 Admin Dashboard</h1>
         <span>Laxmi Fast Food – Shankar Nagar</span>
       </div>
     </div>
     <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    <a href="reviews.html" style="background:transparent;border:1px solid #ffc107;color:#ffc107;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px;" onmouseover="this.style.background='#ffc107';this.style.color='#000'" onmouseout="this.style.background='transparent';this.style.color='#ffc107'"><i class="fas fa-star"></i> Reviews</a>
   </header>
 
   <div class="dashboard-body">
@@ -208,8 +360,71 @@
       <div class="stat-card">
         <i class="fas fa-rupee-sign"></i>
         <div class="num" id="statRevenue">0</div>
-        <div class="lbl">Total Revenue</div>
+        <div class="lbl">Today's Revenue</div>
       </div>
+    </div>
+
+    <!-- CHART -->
+    <div class="chart-section">
+      <div class="chart-top">
+        <h3><i class="fas fa-chart-bar"></i> Revenue Chart</h3>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <div class="chart-tabs">
+            <button class="chart-tab active" onclick="switchChart('monthly', this)">Monthly</button>
+            <button class="chart-tab" onclick="switchChart('daily', this)">Last 7 Days</button>
+          </div>
+          <select class="chart-year-select" id="chartYear" onchange="renderChart()"></select>
+        </div>
+      </div>
+      <canvas id="revenueChart" height="100"></canvas>
+    </div>
+
+    <!-- REVENUE SECTION -->
+    <div class="revenue-section">
+      <h3><i class="fas fa-chart-line"></i> Revenue Overview</h3>
+      <div class="revenue-grid">
+        <div class="rev-card">
+          <i class="fas fa-calendar-day"></i>
+          <div class="rev-num" id="revToday">₹0</div>
+          <div class="rev-lbl">Today</div>
+        </div>
+        <div class="rev-card">
+          <i class="fas fa-calendar-week"></i>
+          <div class="rev-num" id="revWeek">₹0</div>
+          <div class="rev-lbl">This Week</div>
+        </div>
+      </div>
+      <div class="rev-lookup">
+        <input type="date" id="revDateInput" />
+        <button onclick="lookupRevenue()"><i class="fas fa-search"></i> Check Revenue</button>
+      </div>
+      <div class="rev-result" id="revResult">
+        <div class="rev-date" id="revResultDate"></div>
+        <div class="rev-amount" id="revResultAmount"></div>
+        <div class="rev-orders" id="revResultOrders"></div>
+      </div>
+    </div>
+
+    <!-- REVIEWS SECTION -->
+    <div class="reviews-section">
+      <h3><i class="fas fa-star"></i> Customer Reviews</h3>
+      <div class="reviews-summary">
+        <div style="text-align:center">
+          <div class="rev-avg" id="revAvgScore">–</div>
+          <div class="rev-avg-stars" id="revAvgStars"></div>
+          <div class="rev-avg-count" id="revAvgCount">No reviews yet</div>
+        </div>
+        <div class="rev-bars" id="revBars"></div>
+      </div>
+      <div class="rev-filter-row">
+        <button class="rev-filter-btn active" onclick="filterReviews(0,this)">All</button>
+        <button class="rev-filter-btn" onclick="filterReviews(5,this)">⭐⭐⭐⭐⭐</button>
+        <button class="rev-filter-btn" onclick="filterReviews(4,this)">⭐⭐⭐⭐</button>
+        <button class="rev-filter-btn" onclick="filterReviews(3,this)">⭐⭐⭐</button>
+        <button class="rev-filter-btn" onclick="filterReviews(2,this)">⭐⭐</button>
+        <button class="rev-filter-btn" onclick="filterReviews(1,this)">⭐</button>
+      </div>
+      <div id="reviewsList"></div>
     </div>
 
     <!-- CONTROLS -->
@@ -217,16 +432,26 @@
       <input type="text" id="searchInput" placeholder="🔍 Search by name or phone..." oninput="renderTable()"/>
       <select class="filter-select" id="statusFilter" onchange="renderTable()">
         <option value="all">All Status</option>
-        <option value="Pending">Pending</option>
+        <option value="Order Received">Order Received</option>
         <option value="Preparing">Preparing</option>
+        <option value="Ready">Ready</option>
         <option value="Completed">Completed</option>
       </select>
       <button class="refresh-btn" onclick="loadOrders()"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="refresh-btn" style="background:#1a7a1a" onclick="exportCSV()"><i class="fas fa-file-csv"></i> Export CSV</button>
     </div>
 
     <!-- TABLE -->
-    <div class="table-wrap">
-      <table>
+    <div id="ordersTableSection">
+      <div class="table-header">
+        <h3 id="tableTitle">📋 Today's Orders</h3>
+        <span class="date-badge" id="tableDateBadge" style="display:none">
+          <span id="tableDateLabel"></span>
+          <button onclick="clearDateFilter()" title="Clear filter">✕</button>
+        </span>
+      </div>
+      <div class="table-wrap">
+        <table>
         <thead>
           <tr>
             <th>#</th>
@@ -254,10 +479,29 @@
 
 <script>
   // ── CONFIG ──────────────────────────────────────────────
-  const API = 'http://localhost:5000/api/orders';
-  const ADMIN_PASS = 'laxmi@admin123'; // change to match .env
-
+  const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:5000/api/orders'
+    : 'https://laxmi-ffc-backend.onrender.com/api/orders';
+  const ADMIN_PASS = 'laxmi@admin123';
   let allOrders = [];
+  let prevOrderCount = 0;
+
+  // ── NOTIFICATION SOUND ──────────────────────────────────
+  function playNotifSound() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [880, 1100, 880].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = freq; osc.type = 'triangle';
+        gain.gain.setValueAtTime(0.4, ctx.currentTime + i * 0.2);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.2 + 0.25);
+        osc.start(ctx.currentTime + i * 0.2);
+        osc.stop(ctx.currentTime + i * 0.2 + 0.25);
+      });
+    } catch {}
+  }
 
   // ── AUTH ────────────────────────────────────────────────
   function login() {
@@ -265,6 +509,7 @@
     if (pass === ADMIN_PASS) {
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('dashboard').style.display = 'block';
+      requestNotifPermission();
       loadOrders();
     } else {
       document.getElementById('loginErr').style.display = 'block';
@@ -281,9 +526,20 @@
   async function loadOrders() {
     try {
       const res = await fetch(API);
-      allOrders = await res.json();
+      const fresh = await res.json();
+      if (fresh.length > prevOrderCount && prevOrderCount > 0) {
+        const newCount = fresh.length - prevOrderCount;
+        playNotifSound();
+        showToast(`🔔 ${newCount} new order(s) received!`, '#ffc107');
+        sendPushNotif(newCount);
+      }
+      prevOrderCount = fresh.length;
+      allOrders = fresh;
       updateStats();
       renderTable();
+      renderReviews();
+      initChartYears();
+      renderChart();
     } catch {
       showToast('❌ Could not connect to server.', '#ff4444');
     }
@@ -291,54 +547,109 @@
 
   // ── STATS ───────────────────────────────────────────────
   function updateStats() {
-    document.getElementById('statTotal').textContent     = allOrders.length;
-    document.getElementById('statPending').textContent   = allOrders.filter(o => o.orderStatus === 'Pending').length;
-    document.getElementById('statPreparing').textContent = allOrders.filter(o => o.orderStatus === 'Preparing').length;
-    document.getElementById('statCompleted').textContent = allOrders.filter(o => o.orderStatus === 'Completed').length;
-    const rev = allOrders.reduce((s, o) => s + o.totalAmount, 0);
-    document.getElementById('statRevenue').textContent   = '₹' + rev;
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const dateVal  = document.getElementById('revDateInput').value || todayStr;
+
+    const dateOrders = allOrders.filter(o => new Date(o.orderTime).toISOString().slice(0, 10) === dateVal);
+
+    document.getElementById('statTotal').textContent     = dateOrders.length;
+    document.getElementById('statPending').textContent   = dateOrders.filter(o => o.orderStatus === 'Order Received').length;
+    document.getElementById('statPreparing').textContent = dateOrders.filter(o => o.orderStatus === 'Preparing' || o.orderStatus === 'Ready').length;
+    document.getElementById('statCompleted').textContent = dateOrders.filter(o => o.orderStatus === 'Completed').length;
+
+    const today = new Date(); today.setHours(0,0,0,0);
+    const weekAgo = new Date(today); weekAgo.setDate(weekAgo.getDate() - 7);
+    const todayRev = allOrders.filter(o => new Date(o.orderTime) >= today).reduce((s, o) => s + o.totalAmount, 0);
+    const weekRev  = allOrders.filter(o => new Date(o.orderTime) >= weekAgo).reduce((s, o) => s + o.totalAmount, 0);
+    const dateRev  = dateOrders.reduce((s, o) => s + o.totalAmount, 0);
+
+    document.getElementById('statRevenue').textContent = '₹' + dateRev;
+    document.getElementById('revToday').textContent    = '₹' + todayRev;
+    document.getElementById('revWeek').textContent     = '₹' + weekRev;
+  }
+
+  // ── REVENUE LOOKUP ───────────────────────────────────────
+  function lookupRevenue() {
+    const val = document.getElementById('revDateInput').value;
+    if (!val) { alert('Please select a date.'); return; }
+
+    const selected = new Date(val);
+    selected.setHours(0,0,0,0);
+    const next = new Date(selected); next.setDate(next.getDate() + 1);
+
+    const dayOrders = allOrders.filter(o => {
+      const t = new Date(o.orderTime);
+      return t >= selected && t < next;
+    });
+
+    const total = dayOrders.reduce((s, o) => s + o.totalAmount, 0);
+    const label = selected.toLocaleDateString('en-IN', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+
+    document.getElementById('revResultDate').textContent   = label;
+    document.getElementById('revResultAmount').textContent = '₹' + total;
+    document.getElementById('revResultOrders').textContent = dayOrders.length + ' order(s) placed';
+    document.getElementById('revResult').style.display = 'block';
+
+    updateStats();
+    renderTable();
   }
 
   // ── RENDER TABLE ─────────────────────────────────────────
   function renderTable() {
-    const search = document.getElementById('searchInput').value.toLowerCase();
-    const filter = document.getElementById('statusFilter').value;
+    const search  = document.getElementById('searchInput').value.toLowerCase();
+    const filter  = document.getElementById('statusFilter').value;
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const dateVal  = document.getElementById('revDateInput').value || todayStr;
+
+    // Update table title
+    if (dateVal === todayStr) {
+      document.getElementById('tableTitle').textContent = "📋 Today's Orders";
+    } else {
+      const d = new Date(dateVal);
+      document.getElementById('tableTitle').textContent =
+        '📋 Orders – ' + d.toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' });
+    }
 
     let filtered = allOrders.filter(o => {
       const matchSearch = o.customerName.toLowerCase().includes(search) || o.phoneNumber.includes(search);
       const matchFilter = filter === 'all' || o.orderStatus === filter;
-      return matchSearch && matchFilter;
+      const orderDate   = new Date(o.orderTime).toISOString().slice(0, 10);
+      return matchSearch && matchFilter && orderDate === dateVal;
     });
 
     const tbody = document.getElementById('ordersBody');
     if (!filtered.length) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="10">No orders found.</td></tr>';
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="10">No orders found for this date.</td></tr>';
       return;
     }
 
     tbody.innerHTML = filtered.map((o, i) => `
       <tr>
-        <td>${i + 1}</td>
-        <td><span class="order-id">${o._id.slice(-8).toUpperCase()}</span></td>
-        <td><strong>${o.customerName}</strong></td>
-        <td>${o.phoneNumber}</td>
-        <td style="max-width:160px;font-size:12px;opacity:0.8">${o.address}</td>
-        <td>
+        <td data-label="#">${i + 1}</td>
+        <td data-label="Order ID"><span class="order-id">${o.orderId || o._id.slice(-8).toUpperCase()}</span></td>
+        <td data-label="Customer"><strong>${o.customerName}</strong></td>
+        <td data-label="Phone">${o.phoneNumber}</td>
+        <td data-label="Address" style="max-width:160px;font-size:12px;opacity:0.8">${o.address}</td>
+        <td data-label="Items">
           <div class="items-list">
             ${o.itemsOrdered.map(it => `<span>• ${it.name} x${it.quantity} — ₹${it.price * it.quantity}</span>`).join('')}
           </div>
         </td>
-        <td><span class="amount">₹${o.totalAmount}</span></td>
-        <td>
-          <span class="status-badge status-${o.orderStatus}">${o.orderStatus}</span><br/>
+        <td data-label="Total"><span class="amount">₹${o.totalAmount}</span></td>
+        <td data-label="Status">
+          <span class="status-badge status-${o.orderStatus.replace(' ','-')}">${o.orderStatus}</span><br/>
           <select class="status-select" onchange="updateStatus('${o._id}', this.value)">
-            <option value="Pending"   ${o.orderStatus==='Pending'   ? 'selected':''}>Pending</option>
-            <option value="Preparing" ${o.orderStatus==='Preparing' ? 'selected':''}>Preparing</option>
-            <option value="Completed" ${o.orderStatus==='Completed' ? 'selected':''}>Completed</option>
+            <option value="Order Received" ${o.orderStatus==='Order Received' ? 'selected':''}>Order Received</option>
+            <option value="Preparing"      ${o.orderStatus==='Preparing'      ? 'selected':''}>Preparing</option>
+            <option value="Ready"          ${o.orderStatus==='Ready'          ? 'selected':''}>Ready</option>
+            <option value="Completed"      ${o.orderStatus==='Completed'      ? 'selected':''}>Completed</option>
           </select>
         </td>
-        <td class="time-cell">${new Date(o.orderTime).toLocaleString('en-IN')}</td>
-        <td><button class="del-btn" onclick="deleteOrder('${o._id}')"><i class="fas fa-trash"></i></button></td>
+        <td data-label="Time" class="time-cell">${new Date(o.orderTime).toLocaleString('en-IN')}</td>
+        <td data-label="Action">
+          <button class="del-btn" onclick="deleteOrder('${o._id}')"><i class="fas fa-trash"></i></button>
+          <button class="print-btn" onclick="printOrder('${o._id}')"><i class="fas fa-print"></i></button>
+        </td>
       </tr>
     `).join('');
   }
@@ -353,12 +664,41 @@
       });
       const order = allOrders.find(o => o._id === id);
       if (order) order.orderStatus = status;
-      updateStats();
-      renderTable();
+      updateStats(); renderTable();
       showToast(`✅ Status updated to ${status}`);
-    } catch {
-      showToast('❌ Failed to update status.', '#ff4444');
-    }
+    } catch { showToast('❌ Failed to update status.', '#ff4444'); }
+  }
+
+  // ── PRINT ORDER ──────────────────────────────────────────
+  function printOrder(id) {
+    const o = allOrders.find(o => o._id === id);
+    if (!o) return;
+    const win = window.open('', '_blank', 'width=400,height=600');
+    win.document.write(`
+      <html><head><title>Order – ${o.orderId || o._id.slice(-8)}</title>
+      <style>
+        body { font-family: monospace; padding: 20px; font-size: 14px; }
+        h2   { text-align:center; border-bottom: 2px dashed #000; padding-bottom:10px; }
+        .row { display:flex; justify-content:space-between; margin:6px 0; }
+        .total { font-size:16px; font-weight:bold; border-top:2px dashed #000; margin-top:10px; padding-top:10px; }
+        .footer { text-align:center; margin-top:20px; font-size:12px; opacity:0.6; }
+      </style></head><body>
+      <h2>🔥 LAXMI FAST FOOD</h2>
+      <p style="text-align:center">Shankar Nagar, Raipur</p>
+      <p style="text-align:center;font-size:12px">${new Date(o.orderTime).toLocaleString('en-IN')}</p>
+      <hr/>
+      <p><b>Order ID:</b> ${o.orderId || o._id.slice(-8)}</p>
+      <p><b>Customer:</b> ${o.customerName}</p>
+      <p><b>Phone:</b> ${o.phoneNumber}</p>
+      <p><b>Address:</b> ${o.address}</p>
+      <hr/>
+      <b>Items:</b><br/>
+      ${o.itemsOrdered.map(i => `<div class="row"><span>${i.name} x${i.quantity}</span><span>₹${i.price * i.quantity}</span></div>`).join('')}
+      <div class="row total"><span>TOTAL</span><span>₹${o.totalAmount}</span></div>
+      <div class="footer">Thank you! Come again 🙏</div>
+      </body></html>`);
+    win.document.close();
+    win.print();
   }
 
   // ── DELETE ORDER ─────────────────────────────────────────
@@ -382,6 +722,179 @@
     t.style.borderLeftColor = color;
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // Set date filter to today on load
+  document.getElementById('revDateInput').value = new Date().toISOString().slice(0, 10);
+
+  // ── CHART ────────────────────────────────────────────────
+  let revenueChart = null;
+  let chartMode = 'monthly';
+
+  function switchChart(mode, btn) {
+    chartMode = mode;
+    document.querySelectorAll('.chart-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('chartYear').style.display = mode === 'monthly' ? 'block' : 'none';
+    renderChart();
+  }
+
+  function renderChart() {
+    const year = parseInt(document.getElementById('chartYear').value);
+    let labels, data;
+
+    if (chartMode === 'monthly') {
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      labels = months;
+      data = months.map((_, m) =>
+        allOrders
+          .filter(o => { const d = new Date(o.orderTime); return d.getFullYear() === year && d.getMonth() === m; })
+          .reduce((s, o) => s + o.totalAmount, 0)
+      );
+    } else {
+      labels = [];
+      data = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        const str = d.toISOString().slice(0, 10);
+        labels.push(d.toLocaleDateString('en-IN', { day:'2-digit', month:'short' }));
+        data.push(allOrders.filter(o => new Date(o.orderTime).toISOString().slice(0,10) === str).reduce((s,o) => s + o.totalAmount, 0));
+      }
+    }
+
+    if (revenueChart) revenueChart.destroy();
+    revenueChart = new Chart(document.getElementById('revenueChart'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Revenue (₹)',
+          data,
+          backgroundColor: 'rgba(255,43,43,0.7)',
+          borderColor: '#ff2b2b',
+          borderWidth: 1,
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#aaa' }, grid: { color: '#1e1e1e' } },
+          y: { ticks: { color: '#aaa', callback: v => '₹' + v }, grid: { color: '#1e1e1e' }, beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  function initChartYears() {
+    const years = [...new Set(allOrders.map(o => new Date(o.orderTime).getFullYear()))];
+    if (!years.includes(new Date().getFullYear())) years.push(new Date().getFullYear());
+    years.sort((a,b) => b - a);
+    const sel = document.getElementById('chartYear');
+    sel.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+  }
+
+  // ── PUSH NOTIFICATIONS ───────────────────────────────────
+  async function requestNotifPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+      await Notification.requestPermission();
+    }
+  }
+
+  function sendPushNotif(count) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('🔥 Laxmi Fast Food', {
+        body: `${count} new order(s) received!`,
+        icon: 'Logo.png'
+      });
+    }
+  }
+
+  // ── EXPORT CSV ───────────────────────────────────────────
+  function exportCSV() {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const dateVal  = document.getElementById('revDateInput').value || todayStr;
+    const rows = allOrders.filter(o => new Date(o.orderTime).toISOString().slice(0,10) === dateVal);
+    if (!rows.length) { showToast('No orders to export for this date.', '#ffc107'); return; }
+
+    const header = ['Order ID','Customer','Phone','Address','Items','Total','Status','Time'];
+    const csv = [
+      header.join(','),
+      ...rows.map(o => [
+        o.orderId || o._id.slice(-8),
+        `"${o.customerName}"`,
+        o.phoneNumber,
+        `"${o.address}"`,
+        `"${o.itemsOrdered.map(i => `${i.name} x${i.quantity}`).join(', ')}"`,
+        o.totalAmount,
+        o.orderStatus,
+        new Date(o.orderTime).toLocaleString('en-IN')
+      ].join(','))
+    ].join('\n');
+
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = `orders-${dateVal}.csv`;
+    a.click();
+    showToast('✅ CSV exported!');
+  }
+
+  // ── REVIEWS ───────────────────────────────────────────────
+  let reviewFilter = 0;
+
+  function renderReviews() {
+    const reviewed = allOrders.filter(o => o.rating);
+    const filtered = reviewFilter === 0 ? reviewed : reviewed.filter(o => o.rating === reviewFilter);
+
+    // Summary
+    if (reviewed.length) {
+      const avg = (reviewed.reduce((s, o) => s + o.rating, 0) / reviewed.length).toFixed(1);
+      document.getElementById('revAvgScore').textContent = avg;
+      document.getElementById('revAvgStars').textContent = '⭐'.repeat(Math.round(avg));
+      document.getElementById('revAvgCount').textContent = reviewed.length + ' review(s)';
+      const bars = [5,4,3,2,1].map(n => {
+        const cnt = reviewed.filter(o => o.rating === n).length;
+        const pct = Math.round(cnt / reviewed.length * 100);
+        return `<div class="rev-bar-row">
+          <span>${n}</span>
+          <div class="rev-bar-bg"><div class="rev-bar-fill" style="width:${pct}%"></div></div>
+          <span>${cnt}</span>
+        </div>`;
+      }).join('');
+      document.getElementById('revBars').innerHTML = bars;
+    } else {
+      document.getElementById('revAvgScore').textContent = '–';
+      document.getElementById('revAvgStars').textContent = '';
+      document.getElementById('revAvgCount').textContent = 'No reviews yet';
+      document.getElementById('revBars').innerHTML = '';
+    }
+
+    // Cards
+    const list = document.getElementById('reviewsList');
+    if (!filtered.length) {
+      list.innerHTML = `<div class="rev-empty"><i class="fas fa-star" style="font-size:28px;color:#ffc107;display:block;margin-bottom:8px"></i>No reviews${reviewFilter ? ' for ' + reviewFilter + ' star' : ''} yet.</div>`;
+      return;
+    }
+    list.innerHTML = filtered.map(o => `
+      <div class="review-card-admin">
+        <div class="rca-top">
+          <div class="rca-customer">
+            <strong><i class="fas fa-user" style="color:#ff2b2b;margin-right:6px"></i>${o.customerName}</strong>
+            <span><i class="fas fa-phone" style="margin-right:4px"></i>${o.phoneNumber}</span>
+          </div>
+          <div class="rca-stars">${'⭐'.repeat(o.rating)}${'<span style="opacity:0.2">⭐</span>'.repeat(5 - o.rating)}</div>
+        </div>
+        <div class="rca-order">№ ${o.orderId || o._id.slice(-8).toUpperCase()} &nbsp;·&nbsp; ${new Date(o.orderTime).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</div>
+        <div class="rca-text">${o.review || ''}</div>
+      </div>`).join('');
+  }
+
+  function filterReviews(star, btn) {
+    reviewFilter = star;
+    document.querySelectorAll('.rev-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderReviews();
   }
 
   // Auto-refresh every 30 seconds
