@@ -638,6 +638,7 @@
         <td data-label="Total"><span class="amount">₹${o.totalAmount}</span></td>
         <td data-label="Status">
           <span class="status-badge status-${o.orderStatus.replace(' ','-')}">${o.orderStatus}</span><br/>
+          ${o.deliveryConfirmed === 'no' ? '<span style="color:#ff4444;font-size:11px;font-weight:700">⚠️ Not Received!</span><br/>' : o.deliveryConfirmed === 'yes' ? '<span style="color:#4caf50;font-size:11px">✅ Delivered</span><br/>' : ''}
           <select class="status-select" onchange="updateStatus('${o._id}', this.value)">
             <option value="Order Received" ${o.orderStatus==='Order Received' ? 'selected':''}>Order Received</option>
             <option value="Preparing"      ${o.orderStatus==='Preparing'      ? 'selected':''}>Preparing</option>

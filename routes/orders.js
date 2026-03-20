@@ -1,6 +1,40 @@
-const express = require('express');
-const router  = express.Router();
-const Order   = require('../models/Order');
+const express  = require('express');
+const router   = express.Router();
+const Order    = require('../models/Order');
+const Razorpay = require('razorpay');
+const crypto   = require('crypto');
+
+const razorpay = new Razorpay({
+  key_id:     process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET
+});
+
+// POST /api/orders/create-payment — create Razorpay order
+router.post('/create-payment', async (req, res) => {
+  try {
+    const { amount } = req.body; // amount in rupees
+    if (!amount || amount < 1) return res.status(400).json({ error: 'Invalid amount.' });
+    const order = await razorpay.orders.create({
+      amount: Math.round(amount * 100), // paise
+      currency: 'INR',
+      receipt: 'rcpt_' + Date.now()
+    });
+    res.json({ success: true, orderId: order.id, amount: order.amount, currency: order.currency });
+  } catch (err) {
+    res.status(500).json({ error: 'Payment initiation failed.' });
+  }
+});
+
+// POST /api/orders/verify-payment — verify Razorpay signature
+router.post('/verify-payment', (req, res) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+  const expected = crypto
+    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+    .update(razorpay_order_id + '|' + razorpay_payment_id)
+    .digest('hex');
+  if (expected !== razorpay_signature) return res.status(400).json({ success: false, error: 'Payment verification failed.' });
+  res.json({ success: true });
+});
 
 // POST /api/orders — place a new order
 router.post('/', async (req, res) => {
@@ -20,7 +54,8 @@ router.post('/', async (req, res) => {
     else if (totalQty === 2 && uniqueDishes === 2) prepTime = 20;
     else                                           prepTime = 20 + (totalQty - 2) * 3;
 
-    const order = await Order.create({ customerName, phoneNumber, address, itemsOrdered, totalAmount, prepTime });
+    const { paymentMethod = 'cod', transactionId = '' } = req.body;
+    const order = await Order.create({ customerName, phoneNumber, address, itemsOrdered, totalAmount, prepTime, paymentMethod, transactionId });
 
     // Auto-advance status every 5 minutes
     const STATUS_STEPS = ['Order Received', 'Preparing', 'Ready', 'Completed'];
@@ -101,6 +136,19 @@ router.post('/coupon/validate', (req, res) => {
   const coupon = COUPONS[code];
   if (!coupon) return res.status(404).json({ valid: false, error: 'Invalid coupon code.' });
   res.json({ valid: true, ...coupon, code });
+});
+
+// PATCH /api/orders/:id/delivery-confirm — customer confirms delivery
+router.patch('/:id/delivery-confirm', async (req, res) => {
+  try {
+    const { confirmed } = req.body; // 'yes' or 'no'
+    if (!['yes', 'no'].includes(confirmed)) return res.status(400).json({ error: 'Invalid value.' });
+    const order = await Order.findByIdAndUpdate(req.params.id, { deliveryConfirmed: confirmed }, { new: true });
+    if (!order) return res.status(404).json({ error: 'Order not found.' });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error.' });
+  }
 });
 
 // DELETE /api/orders/:id — delete order (admin)

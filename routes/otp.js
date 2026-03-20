@@ -1,7 +1,6 @@
 const express = require('express');
 const router  = express.Router();
-
-const otpStore = {};
+const Otp     = require('../models/Otp');
 
 // POST /api/otp/send
 router.post('/send', async (req, res) => {
@@ -10,13 +9,19 @@ router.post('/send', async (req, res) => {
     return res.status(400).json({ success: false, error: 'Invalid phone number.' });
 
   const otp = String(Math.floor(100000 + Math.random() * 900000));
-  otpStore[phone] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 };
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 min
+
+  // Upsert — replace any existing OTP for this phone
+  await Otp.findOneAndUpdate(
+    { phone },
+    { otp, expiresAt },
+    { upsert: true, new: true }
+  );
 
   try {
-    const apiKey  = process.env.TWOFACTOR_KEY;
-
+    const apiKey   = process.env.TWOFACTOR_KEY;
     const response = await fetch(`https://2factor.in/API/V1/${apiKey}/SMS/${phone}/${otp}/AUTOGEN`);
-    const data = await response.json();
+    const data     = await response.json();
     console.log('2Factor response:', data);
 
     if (data.Status === 'Success') {
@@ -32,19 +37,20 @@ router.post('/send', async (req, res) => {
 });
 
 // POST /api/otp/verify
-router.post('/verify', (req, res) => {
+router.post('/verify', async (req, res) => {
   const { phone, otp } = req.body;
-  const record = otpStore[phone];
+
+  const record = await Otp.findOne({ phone });
   if (!record)
     return res.status(400).json({ success: false, error: 'OTP not sent or expired.' });
-  if (Date.now() > record.expiresAt) {
-    delete otpStore[phone];
+  if (new Date() > record.expiresAt) {
+    await Otp.deleteOne({ phone });
     return res.status(400).json({ success: false, error: 'OTP expired. Request a new one.' });
   }
   if (record.otp !== otp)
     return res.status(400).json({ success: false, error: 'Incorrect OTP.' });
 
-  delete otpStore[phone];
+  await Otp.deleteOne({ phone });
   res.json({ success: true });
 });
 

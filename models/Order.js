@@ -20,8 +20,9 @@ const orderSchema = new mongoose.Schema({
   review:       { type: String, default: '' },
   couponCode:     { type: String, default: '' },
   discount:       { type: Number, default: 0 },
-  paymentMethod:  { type: String, enum: ['cod', 'upi'], default: 'cod' },
-  transactionId:  { type: String, default: '' }
+  paymentMethod:     { type: String, enum: ['cod', 'upi'], default: 'cod' },
+  transactionId:     { type: String, default: '' },
+  deliveryConfirmed: { type: String, enum: ['yes', 'no', 'pending'], default: 'pending' }
 });
 
 // Auto-generate orderId before saving
